@@ -1,0 +1,45 @@
+/* YouTube Enhancer Styles */
+
+/* Hide ad elements */
+.ad-showing,
+.ytp-ad-progress-list,
+.ytp-ad-message-container,
+ytd-promoted-video-renderer,
+ytd-display-ad-renderer,
+ytd-ad-slot-renderer,
+ytd-in-feed-ad-layout-renderer,
+ytd-banner-promo-renderer {
+  display: none !important;
+}
+
+/* Enhanced video player styles */
+.ytp-chrome-controls {
+  opacity: 0.2;
+  transition: opacity 0.3s ease;
+}
+
+.ytp-chrome-controls:hover {
+  opacity: 1;
+}
+
+/* Clean up homepage */
+ytd-browse[page-subtype="home"] #contents {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Improve video description readability */
+#description {
+  font-size: 14px !important;
+  line-height: 1.5em !important;
+}
+
+/* Hide annoying notification popups */
+.ytd-notification-toast-renderer {
+  display: none !important;
+}
+
+/* Custom styles for auto-hiding shorts, applied via JS when setting is enabled */
+.yt-enhancer-hide-shorts {
+  display: none !important;
+}
