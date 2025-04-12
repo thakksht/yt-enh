@@ -119,6 +119,49 @@ function hideShorts() {
   if (shortsTab) {
     shortsTab.style.display = 'none';
   }
+  
+  // If we're on search results page, also hide shorts there
+  if (window.location.pathname === '/results') {
+    hideSearchShorts();
+  }
+}
+
+// Specific function to hide shorts in search results
+function hideSearchShorts() {
+  // Target shorts in search results more specifically
+  const searchShorts = document.querySelectorAll(`
+    ytd-video-renderer:has(a[href^="/shorts/"]), 
+    ytd-reel-item-renderer, 
+    ytd-reel-shelf-renderer,
+    ytd-rich-section-renderer:has(span:contains("Shorts")),
+    ytd-shelf-renderer:has([title*="Short"]),
+    ytd-shelf-renderer:has([title*="short"]),
+    ytd-item-section-renderer:has(#dismissible a[href^="/shorts/"])
+  `);
+  
+  searchShorts.forEach(item => {
+    item.style.display = 'none';
+  });
+  
+  // Also hide any shelf containing shorts
+  const shortShelves = document.querySelectorAll('ytd-shelf-renderer, ytd-item-section-renderer');
+  shortShelves.forEach(shelf => {
+    // Check if shelf title contains "Short" or has shorts content
+    const title = shelf.querySelector('#title-text');
+    if (title && (title.textContent.toLowerCase().includes('short') || 
+       shelf.querySelector('a[href^="/shorts/"]'))) {
+      shelf.style.display = 'none';
+    }
+  });
+  
+  // Hide any section with shorts
+  const shortSections = document.querySelectorAll('ytd-rich-section-renderer');
+  shortSections.forEach(section => {
+    if (section.textContent.toLowerCase().includes('short') || 
+        section.querySelector('a[href^="/shorts/"]')) {
+      section.style.display = 'none';
+    }
+  });
 }
 
 // Function for Focus Mode - transforms homepage to focus on search
@@ -145,55 +188,9 @@ function enableFocusMode() {
         display: none !important;
       }
       
-      /* Create a clean search-focused interface */
-      #masthead-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        max-width: 800px;
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-      
-      /* Make search bar prominent */
-      #search-container, #search, #search-form {
-        width: 100% !important;
-        max-width: 800px !important;
-      }
-      
-      /* Increase search bar size */
-      #search-input #search {
-        height: 60px !important;
-        font-size: 20px !important;
-        border-radius: 30px !important;
-        background-color: white !important;
-        border: 2px solid #cc0000 !important;
-        padding: 0 20px !important;
-      }
-      
-      /* Style search button */
-      #search-icon-legacy {
-        height: 60px !important;
-        width: 60px !important;
-        border-radius: 0 30px 30px 0 !important;
-        background-color: #cc0000 !important;
-      }
-      
-      /* Add a clean focus mode message */
-      body::before {
-        content: "Focus Mode - Search for what you want to learn";
-        display: block;
-        position: fixed;
-        top: 35%;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        font-size: 24px;
-        color: #cc0000;
-        font-weight: bold;
+      /* Make page background clean */
+      #content {
+        background-color: #f9f9f9 !important;
       }
       
       /* Hide guide menu when in focus mode */
@@ -203,43 +200,188 @@ function enableFocusMode() {
       }
       
       /* Only keep essential header elements */
-      .ytd-masthead > *:not(#search-container):not(#logo-container),
+      ytd-masthead > *:not(#logo-container),
       #buttons.ytd-masthead,
       #guide-button {
         display: none !important;
       }
       
-      /* Keep YouTube logo */
+      /* Keep YouTube logo but style it */
       #logo-container {
-        position: absolute;
-        top: -100px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      
-      /* Make page background clean */
-      #content {
-        background-color: #f9f9f9 !important;
+        margin: 0 auto !important;
+        position: relative !important;
+        display: block !important;
+        text-align: center !important;
+        padding-top: 40px !important;
       }
     `;
     
-    // Create search shortcut info
-    let focusModeInfo = document.getElementById('yt-enhancer-focus-mode-info');
-    if (!focusModeInfo) {
-      focusModeInfo = document.createElement('div');
-      focusModeInfo.id = 'yt-enhancer-focus-mode-info';
-      focusModeInfo.style.cssText = 'position: fixed; bottom: 20px; left: 0; width: 100%; text-align: center; font-size: 14px; color: #666;';
-      focusModeInfo.textContent = 'Press / to focus on search | ESC to clear search';
-      document.body.appendChild(focusModeInfo);
-    }
-    
-    // Add search keyboard shortcut
-    document.addEventListener('keydown', function(e) {
-      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+    // Create a custom search container that replaces the standard YouTube interface
+    const existingSearchContainer = document.getElementById('yt-enhancer-search-container');
+    if (!existingSearchContainer) {
+      // Create custom search interface
+      const searchContainer = document.createElement('div');
+      searchContainer.id = 'yt-enhancer-search-container';
+      searchContainer.style.cssText = `
+        position: fixed;
+        top: 150px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 800px;
+        padding: 30px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        z-index: 9999;
+      `;
+      
+      // Add heading
+      const heading = document.createElement('h1');
+      heading.textContent = 'Focus Mode - YouTube Enhancer';
+      heading.style.cssText = `
+        color: #cc0000;
+        margin-bottom: 20px;
+        font-size: 24px;
+      `;
+      searchContainer.appendChild(heading);
+      
+      // Add description
+      const description = document.createElement('p');
+      description.textContent = 'Search for what you want to learn without distractions';
+      description.style.cssText = `
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 16px;
+      `;
+      searchContainer.appendChild(description);
+      
+      // Create search form
+      const searchForm = document.createElement('form');
+      searchForm.id = 'yt-enhancer-search-form';
+      searchForm.style.cssText = `
+        display: flex;
+        width: 100%;
+        margin-bottom: 20px;
+      `;
+      
+      // Create search input
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.placeholder = 'Search YouTube...';
+      searchInput.id = 'yt-enhancer-search-input';
+      searchInput.style.cssText = `
+        flex: 1;
+        padding: 15px 20px;
+        font-size: 18px;
+        border: 2px solid #cc0000;
+        border-radius: 30px 0 0 30px;
+        outline: none;
+      `;
+      searchForm.appendChild(searchInput);
+      
+      // Create search button
+      const searchButton = document.createElement('button');
+      searchButton.type = 'submit';
+      searchButton.id = 'yt-enhancer-search-button';
+      searchButton.textContent = 'Search';
+      searchButton.style.cssText = `
+        background-color: #cc0000;
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 0 30px 30px 0;
+        cursor: pointer;
+      `;
+      searchForm.appendChild(searchButton);
+      
+      // Add event listener to the form
+      searchForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        document.querySelector('#search-input input').focus();
-      }
-    });
+        const searchQuery = searchInput.value.trim();
+        if (searchQuery) {
+          // Redirect to YouTube search results with the query
+          window.location.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+        }
+      });
+      
+      searchContainer.appendChild(searchForm);
+      
+      // Add popular learning categories
+      const categoriesContainer = document.createElement('div');
+      categoriesContainer.style.cssText = `
+        margin-top: 30px;
+        text-align: left;
+      `;
+      
+      const categoriesHeading = document.createElement('h3');
+      categoriesHeading.textContent = 'Popular Learning Categories:';
+      categoriesHeading.style.cssText = `
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 18px;
+      `;
+      categoriesContainer.appendChild(categoriesHeading);
+      
+      // Define popular learning categories
+      const categories = [
+        { name: 'Programming Tutorials', query: 'programming tutorials' },
+        { name: 'Science Explanations', query: 'science explained' },
+        { name: 'Math Lessons', query: 'mathematics lessons' },
+        { name: 'History Documentaries', query: 'history documentary' },
+        { name: 'Language Learning', query: 'learn language' },
+        { name: 'DIY & Crafts', query: 'DIY tutorials' }
+      ];
+      
+      // Create category grid
+      const categoryGrid = document.createElement('div');
+      categoryGrid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+      `;
+      
+      categories.forEach(category => {
+        const categoryLink = document.createElement('a');
+        categoryLink.textContent = category.name;
+        categoryLink.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(category.query)}`;
+        categoryLink.style.cssText = `
+          display: block;
+          background-color: #f5f5f5;
+          padding: 10px 15px;
+          border-radius: 5px;
+          text-decoration: none;
+          color: #333;
+          font-size: 14px;
+          transition: background-color 0.2s;
+        `;
+        
+        // Add hover effect
+        categoryLink.addEventListener('mouseenter', function() {
+          this.style.backgroundColor = '#e5e5e5';
+        });
+        
+        categoryLink.addEventListener('mouseleave', function() {
+          this.style.backgroundColor = '#f5f5f5';
+        });
+        
+        categoryGrid.appendChild(categoryLink);
+      });
+      
+      categoriesContainer.appendChild(categoryGrid);
+      searchContainer.appendChild(categoriesContainer);
+      
+      // Add the custom search container to the body
+      document.body.appendChild(searchContainer);
+      
+      // Auto-focus the search input
+      setTimeout(() => {
+        searchInput.focus();
+      }, 500);
+    }
   }
   
   // When in search results, keep interface clean but allow results
@@ -275,6 +417,16 @@ function enableFocusMode() {
         box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
       }
     `;
+    
+    // If hide shorts is also enabled, make sure we hide shorts in search results
+    if (settings.hideShorts) {
+      hideSearchShorts();
+      
+      // Set up a continuous check for shorts in search results as they might load dynamically
+      if (!window.hideSearchShortsInterval) {
+        window.hideSearchShortsInterval = setInterval(hideSearchShorts, 1000);
+      }
+    }
   }
 }
 
@@ -290,10 +442,16 @@ function disableFocusMode() {
     focusModeResultsStyle.textContent = '';
   }
   
-  // Remove info text
-  const focusModeInfo = document.getElementById('yt-enhancer-focus-mode-info');
-  if (focusModeInfo) {
-    focusModeInfo.remove();
+  // Remove the custom search container
+  const searchContainer = document.getElementById('yt-enhancer-search-container');
+  if (searchContainer) {
+    searchContainer.remove();
+  }
+  
+  // Clear the shorts hiding interval if it exists
+  if (window.hideSearchShortsInterval) {
+    clearInterval(window.hideSearchShortsInterval);
+    window.hideSearchShortsInterval = null;
   }
 }
 
